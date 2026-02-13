@@ -33,9 +33,3 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 ```
-
-Save (`Ctrl+S`), close Notepad, then:
-```
-git add .github\workflows\deploy.yml
-git commit -m "fix deploy workflow"
-git push
