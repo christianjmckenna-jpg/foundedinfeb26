@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="On Beginnings — Founded in Feb 2026">
+  <article class="blog-post">
+    <header class="post-header">
+      <span class="post-date">February 13, 2026</span>
+      <h1>On Beginnings</h1>
+      <div class="divider"></div>
+    </header>
+
+    <section class="post-body">
+      <p class="drop-cap">Every story has to start somewhere. This one starts with a blank page, a blinking cursor, and the quiet conviction that some things are worth writing down.</p>
+
+      <p>There's a particular kind of courage in beginning something new — not the loud, heroic kind, but the quieter sort. The kind that says: I don't know where this leads, but I'm going to start walking anyway.</p>
+
+      <p>This blog is that first step. A place to think out loud, to wrestle with ideas, to put words to things that have been circling in my head for too long. Some of what you find here will be polished. Some of it won't. That's by design.</p>
+
+      <p>The best books I've ever read didn't try to have all the answers. They asked better questions. That's what I'm after here — not certainty, but clarity. Or at least the attempt at it.</p>
+
+      <p>So here we are. Chapter one. Page one. Let's see where it goes.</p>
+    </section>
+
+    <footer class="post-footer">
+      <div class="divider"></div>
+      <a href="/foundedinfeb26">&larr; Back to all writing</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .blog-post {
+    padding: 2rem 0;
+  }
+
+  .post-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .post-date {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .post-header h1 {
+    font-weight: 400;
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  .post-body {
+    margin: 1rem 0;
+  }
+
+  .post-footer {
+    margin-top: 2rem;
+    text-align: center;
+  }
+
+  .post-footer a {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    transition: color 0.3s ease;
+  }
+
+  .post-footer a:hover {
+    color: var(--accent-hover);
+  }
+</style>

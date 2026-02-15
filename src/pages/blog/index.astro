@@ -1,0 +1,90 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Writing — Founded in Feb 2026">
+  <section class="blog-header">
+    <div class="chapter-number">II</div>
+    <h1>Writing</h1>
+    <p class="subtitle">Chapters in no particular hurry</p>
+    <div class="divider"></div>
+  </section>
+
+  <section class="posts-list">
+    <article class="post-preview">
+      <span class="post-date">February 13, 2026</span>
+      <h3><a href="/blog/first-post">On Beginnings</a></h3>
+      <p class="post-excerpt">Every story has to start somewhere. This one starts with a blank page, a blinking cursor, and the quiet conviction that some things are worth writing down.</p>
+    </article>
+  </section>
+</BaseLayout>
+
+<style>
+  .blog-header {
+    text-align: center;
+    padding: 2rem 0 0;
+  }
+
+  .chapter-number {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.15em;
+    color: var(--ink-faint);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+
+  .blog-header h1 {
+    font-weight: 400;
+    letter-spacing: 0.03em;
+  }
+
+  .subtitle {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-style: italic;
+    color: var(--ink-faint);
+    font-size: 1.05rem;
+    text-indent: 0;
+    margin-bottom: 0;
+  }
+
+  .posts-list {
+    margin-top: 1rem;
+  }
+
+  .post-preview {
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--chapter-rule);
+  }
+
+  .post-date {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .post-preview h3 {
+    margin-top: 0.3rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 1.5rem;
+  }
+
+  .post-preview h3 a {
+    color: var(--ink);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  .post-preview h3 a:hover {
+    color: var(--accent);
+  }
+
+  .post-excerpt {
+    color: var(--ink-light);
+    text-indent: 0;
+    font-size: 1rem;
+  }
+</style>
