@@ -1,0 +1,640 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Financial Tracker — Founded in Feb 2026" description="Track labor and material costs">
+  <section class="finance-header">
+    <div class="chapter-number">Finance</div>
+    <h1>Financial Tracker</h1>
+    <p class="subtitle">Labor &amp; Material Cost Dashboard</p>
+    <div class="divider"></div>
+  </section>
+
+  <!-- Summary Cards -->
+  <section class="summary-cards">
+    <div class="card">
+      <div class="card-label">Total Labor</div>
+      <div class="card-value" id="total-labor">$0.00</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Total Materials</div>
+      <div class="card-value" id="total-materials">$0.00</div>
+    </div>
+    <div class="card card-grand">
+      <div class="card-label">Grand Total</div>
+      <div class="card-value" id="grand-total">$0.00</div>
+    </div>
+  </section>
+
+  <!-- Labor Section -->
+  <section class="tracker-section">
+    <h2>Labor</h2>
+    <p class="section-note">Track worker hours and rates.</p>
+
+    <form id="labor-form" class="entry-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="labor-worker">Worker / Role</label>
+          <input type="text" id="labor-worker" placeholder="e.g. John — Electrician" required />
+        </div>
+        <div class="form-group form-group-sm">
+          <label for="labor-hours">Hours</label>
+          <input type="number" id="labor-hours" min="0" step="0.25" placeholder="8" required />
+        </div>
+        <div class="form-group form-group-sm">
+          <label for="labor-rate">Rate ($/hr)</label>
+          <input type="number" id="labor-rate" min="0" step="0.01" placeholder="25.00" required />
+        </div>
+        <div class="form-group form-group-sm">
+          <label for="labor-date">Date</label>
+          <input type="date" id="labor-date" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Add Entry</button>
+      </div>
+    </form>
+
+    <div class="table-wrap">
+      <table id="labor-table">
+        <thead>
+          <tr>
+            <th>Worker / Role</th>
+            <th>Date</th>
+            <th class="num">Hours</th>
+            <th class="num">Rate ($/hr)</th>
+            <th class="num">Subtotal</th>
+            <th class="action-col"></th>
+          </tr>
+        </thead>
+        <tbody id="labor-body">
+          <!-- rows rendered by JS -->
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" class="foot-label">Labor Total</td>
+            <td class="num foot-total" id="labor-foot-total">$0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <p class="empty-state" id="labor-empty">No labor entries yet. Add one above.</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Materials Section -->
+  <section class="tracker-section">
+    <h2>Materials</h2>
+    <p class="section-note">Track items, quantities, and unit costs.</p>
+
+    <form id="material-form" class="entry-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="mat-item">Item / Description</label>
+          <input type="text" id="mat-item" placeholder="e.g. 2×4 Lumber (8ft)" required />
+        </div>
+        <div class="form-group form-group-sm">
+          <label for="mat-qty">Qty</label>
+          <input type="number" id="mat-qty" min="0" step="0.01" placeholder="10" required />
+        </div>
+        <div class="form-group form-group-sm">
+          <label for="mat-unit">Unit Price ($)</label>
+          <input type="number" id="mat-unit" min="0" step="0.01" placeholder="4.50" required />
+        </div>
+        <div class="form-group form-group-sm">
+          <label for="mat-date">Date</label>
+          <input type="date" id="mat-date" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Add Entry</button>
+      </div>
+    </form>
+
+    <div class="table-wrap">
+      <table id="material-table">
+        <thead>
+          <tr>
+            <th>Item / Description</th>
+            <th>Date</th>
+            <th class="num">Qty</th>
+            <th class="num">Unit Price</th>
+            <th class="num">Subtotal</th>
+            <th class="action-col"></th>
+          </tr>
+        </thead>
+        <tbody id="material-body">
+          <!-- rows rendered by JS -->
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" class="foot-label">Materials Total</td>
+            <td class="num foot-total" id="material-foot-total">$0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <p class="empty-state" id="material-empty">No material entries yet. Add one above.</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="danger-zone">
+    <button id="clear-all" class="btn btn-ghost">Clear all data</button>
+  </section>
+</BaseLayout>
+
+<script>
+  // ── Types ──────────────────────────────────────────────────────────────
+  interface LaborEntry {
+    id: string;
+    worker: string;
+    hours: number;
+    rate: number;
+    date: string;
+  }
+
+  interface MaterialEntry {
+    id: string;
+    item: string;
+    qty: number;
+    unitPrice: number;
+    date: string;
+  }
+
+  // ── Storage ────────────────────────────────────────────────────────────
+  const LABOR_KEY = 'finance_labor';
+  const MATERIAL_KEY = 'finance_material';
+
+  function loadLabor(): LaborEntry[] {
+    try { return JSON.parse(localStorage.getItem(LABOR_KEY) || '[]'); }
+    catch { return []; }
+  }
+
+  function loadMaterials(): MaterialEntry[] {
+    try { return JSON.parse(localStorage.getItem(MATERIAL_KEY) || '[]'); }
+    catch { return []; }
+  }
+
+  function saveLabor(data: LaborEntry[]) {
+    localStorage.setItem(LABOR_KEY, JSON.stringify(data));
+  }
+
+  function saveMaterials(data: MaterialEntry[]) {
+    localStorage.setItem(MATERIAL_KEY, JSON.stringify(data));
+  }
+
+  // ── Formatting ─────────────────────────────────────────────────────────
+  function fmt(n: number): string {
+    return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function fmtDate(d: string): string {
+    if (!d) return '—';
+    const [y, m, day] = d.split('-');
+    return `${m}/${day}/${y}`;
+  }
+
+  // ── Render Labor ───────────────────────────────────────────────────────
+  function renderLabor() {
+    const entries = loadLabor();
+    const tbody = document.getElementById('labor-body')!;
+    const empty = document.getElementById('labor-empty')!;
+    const table = document.getElementById('labor-table')!;
+    const footTotal = document.getElementById('labor-foot-total')!;
+
+    tbody.innerHTML = '';
+    let total = 0;
+
+    entries.forEach(e => {
+      const sub = e.hours * e.rate;
+      total += sub;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escHtml(e.worker)}</td>
+        <td>${fmtDate(e.date)}</td>
+        <td class="num">${e.hours}</td>
+        <td class="num">${fmt(e.rate)}</td>
+        <td class="num">${fmt(sub)}</td>
+        <td class="action-col">
+          <button class="delete-btn" data-type="labor" data-id="${e.id}" title="Remove">×</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+
+    const isEmpty = entries.length === 0;
+    empty.style.display = isEmpty ? 'block' : 'none';
+    table.style.display = isEmpty ? 'none' : 'table';
+    footTotal.textContent = fmt(total);
+    updateSummary();
+  }
+
+  // ── Render Materials ───────────────────────────────────────────────────
+  function renderMaterials() {
+    const entries = loadMaterials();
+    const tbody = document.getElementById('material-body')!;
+    const empty = document.getElementById('material-empty')!;
+    const table = document.getElementById('material-table')!;
+    const footTotal = document.getElementById('material-foot-total')!;
+
+    tbody.innerHTML = '';
+    let total = 0;
+
+    entries.forEach(e => {
+      const sub = e.qty * e.unitPrice;
+      total += sub;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escHtml(e.item)}</td>
+        <td>${fmtDate(e.date)}</td>
+        <td class="num">${e.qty}</td>
+        <td class="num">${fmt(e.unitPrice)}</td>
+        <td class="num">${fmt(sub)}</td>
+        <td class="action-col">
+          <button class="delete-btn" data-type="material" data-id="${e.id}" title="Remove">×</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+
+    const isEmpty = entries.length === 0;
+    empty.style.display = isEmpty ? 'block' : 'none';
+    table.style.display = isEmpty ? 'none' : 'table';
+    footTotal.textContent = fmt(total);
+    updateSummary();
+  }
+
+  // ── Summary ────────────────────────────────────────────────────────────
+  function updateSummary() {
+    const laborTotal = loadLabor().reduce((s, e) => s + e.hours * e.rate, 0);
+    const matTotal = loadMaterials().reduce((s, e) => s + e.qty * e.unitPrice, 0);
+
+    document.getElementById('total-labor')!.textContent = fmt(laborTotal);
+    document.getElementById('total-materials')!.textContent = fmt(matTotal);
+    document.getElementById('grand-total')!.textContent = fmt(laborTotal + matTotal);
+  }
+
+  // ── XSS helper ────────────────────────────────────────────────────────
+  function escHtml(s: string): string {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── ID generator ──────────────────────────────────────────────────────
+  function uid(): string {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2);
+  }
+
+  // ── Event: Add Labor ───────────────────────────────────────────────────
+  document.getElementById('labor-form')!.addEventListener('submit', e => {
+    e.preventDefault();
+    const worker = (document.getElementById('labor-worker') as HTMLInputElement).value.trim();
+    const hours = parseFloat((document.getElementById('labor-hours') as HTMLInputElement).value);
+    const rate = parseFloat((document.getElementById('labor-rate') as HTMLInputElement).value);
+    const date = (document.getElementById('labor-date') as HTMLInputElement).value;
+
+    const entries = loadLabor();
+    entries.push({ id: uid(), worker, hours, rate, date });
+    saveLabor(entries);
+    renderLabor();
+    (e.target as HTMLFormElement).reset();
+  });
+
+  // ── Event: Add Material ────────────────────────────────────────────────
+  document.getElementById('material-form')!.addEventListener('submit', e => {
+    e.preventDefault();
+    const item = (document.getElementById('mat-item') as HTMLInputElement).value.trim();
+    const qty = parseFloat((document.getElementById('mat-qty') as HTMLInputElement).value);
+    const unitPrice = parseFloat((document.getElementById('mat-unit') as HTMLInputElement).value);
+    const date = (document.getElementById('mat-date') as HTMLInputElement).value;
+
+    const entries = loadMaterials();
+    entries.push({ id: uid(), item, qty, unitPrice, date });
+    saveMaterials(entries);
+    renderMaterials();
+    (e.target as HTMLFormElement).reset();
+  });
+
+  // ── Event: Delete row ─────────────────────────────────────────────────
+  document.addEventListener('click', e => {
+    const btn = (e.target as HTMLElement).closest('.delete-btn') as HTMLElement | null;
+    if (!btn) return;
+    const { type, id } = btn.dataset;
+    if (type === 'labor') {
+      saveLabor(loadLabor().filter(x => x.id !== id));
+      renderLabor();
+    } else if (type === 'material') {
+      saveMaterials(loadMaterials().filter(x => x.id !== id));
+      renderMaterials();
+    }
+  });
+
+  // ── Event: Clear all ──────────────────────────────────────────────────
+  document.getElementById('clear-all')!.addEventListener('click', () => {
+    if (confirm('Clear all labor and material entries? This cannot be undone.')) {
+      saveLabor([]);
+      saveMaterials([]);
+      renderLabor();
+      renderMaterials();
+    }
+  });
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  renderLabor();
+  renderMaterials();
+</script>
+
+<style>
+  /* ── Page header ─────────────────────────────────────────── */
+  .finance-header {
+    text-align: center;
+    padding: 2rem 0 0;
+  }
+
+  .chapter-number {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .finance-header h1 {
+    font-size: 2.6rem;
+    font-weight: 400;
+    margin-bottom: 0.4rem;
+  }
+
+  .subtitle {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-style: italic;
+    color: var(--ink-light);
+    font-size: 1.1rem;
+    text-indent: 0;
+  }
+
+  /* ── Summary cards ───────────────────────────────────────── */
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 2rem 0 2.5rem;
+  }
+
+  .card {
+    background: var(--paper-dark);
+    border: 1px solid var(--chapter-rule);
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+  }
+
+  .card-grand {
+    background: #f0e8d8;
+    border-color: var(--accent);
+  }
+
+  .card-label {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 0.4rem;
+  }
+
+  .card-value {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .card-grand .card-value {
+    color: var(--accent);
+  }
+
+  /* ── Section ─────────────────────────────────────────────── */
+  .tracker-section {
+    margin-bottom: 1rem;
+  }
+
+  .tracker-section h2 {
+    font-size: 1.6rem;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 0.2rem;
+  }
+
+  .section-note {
+    font-style: italic;
+    color: var(--ink-faint);
+    font-size: 0.9rem;
+    text-indent: 0;
+    margin-bottom: 1.25rem;
+  }
+
+  /* ── Entry form ──────────────────────────────────────────── */
+  .entry-form {
+    background: var(--paper-dark);
+    border: 1px solid var(--chapter-rule);
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 0.75rem;
+    align-items: end;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  label {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"] {
+    font-family: 'EB Garamond', 'Georgia', serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--chapter-rule);
+    border-radius: 3px;
+    padding: 0.4rem 0.6rem;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .form-actions {
+    margin-top: 0.9rem;
+    text-align: right;
+  }
+
+  /* ── Buttons ─────────────────────────────────────────────── */
+  .btn {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 0.45rem 1.2rem;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--paper);
+    border: 1px solid var(--accent);
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink-faint);
+    border: 1px solid var(--chapter-rule);
+  }
+
+  .btn-ghost:hover {
+    color: #c0392b;
+    border-color: #c0392b;
+  }
+
+  /* ── Table ───────────────────────────────────────────────── */
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+
+  thead th {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border-bottom: 1px solid var(--chapter-rule);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 500;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--paper-dark);
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover {
+    background: var(--paper-dark);
+  }
+
+  tbody td {
+    padding: 0.55rem 0.75rem;
+    color: var(--ink-light);
+  }
+
+  tfoot td {
+    padding: 0.6rem 0.75rem;
+    border-top: 1px solid var(--chapter-rule);
+  }
+
+  .foot-label {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .foot-total {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 1rem;
+  }
+
+  .num {
+    text-align: right;
+  }
+
+  .action-col {
+    width: 2rem;
+    text-align: center;
+  }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    transition: color 0.2s;
+  }
+
+  .delete-btn:hover {
+    color: #c0392b;
+  }
+
+  /* ── Empty state ─────────────────────────────────────────── */
+  .empty-state {
+    text-align: center;
+    font-style: italic;
+    color: var(--ink-faint);
+    font-size: 0.9rem;
+    padding: 1.5rem 0;
+    text-indent: 0;
+    border: 1px dashed var(--chapter-rule);
+    border-radius: 4px;
+  }
+
+  /* ── Clear all ───────────────────────────────────────────── */
+  .danger-zone {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  /* ── Responsive ──────────────────────────────────────────── */
+  @media (max-width: 680px) {
+    .summary-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .form-row {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .form-row .form-group:first-child {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
